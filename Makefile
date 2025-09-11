@@ -71,7 +71,6 @@ build-and-push-multi-platform-docker:  ## build and push multi-platform docker i
 			--platform=$(PLATFORM) \
 			-f Dockerfile \
 			-t $(IMAGE_NAME):$(IMAGE_TAG) \
-			-t $(IMAGE_NAME):$(IMAGE_TAG)-latest \
 			--push
 
 # To be able to build a multiplatform docker image with dev dependencies
