@@ -40,9 +40,9 @@ BRANCH ?= main
 lint-docstrings: ## check docstrings
 	./scripts/lint_python_docstrings.sh $(BRANCH)
 
-IMAGE_NAME ?= rasa/rasa-sdk
-IMAGE_WITH_DEV_DEPS ?= rasa/rasa-sdk-with-dev-deps
-IMAGE_TAG ?= latest
+IMAGE_NAME ?= ghcr.io/taprojectgermany/rasa-sdk
+IMAGE_WITH_DEV_DEPS ?= ghcr.io/taprojectgermany/rasa-sdk
+IMAGE_TAG ?= localdev
 PLATFORM ?= linux/arm64
 POETRY_VERSION ?= $(shell ./scripts/poetry-version.sh)
 

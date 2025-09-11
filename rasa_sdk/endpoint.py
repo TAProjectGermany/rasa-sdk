@@ -14,6 +14,23 @@ from sanic.compat import Header
 from sanic.response import HTTPResponse
 from sanic.worker.loader import AppLoader
 
+from opentelemetry import trace
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from opentelemetry.propagators.textmap import Getter
+
+tracer = trace.get_tracer(__name__)
+prop = TraceContextTextMapPropagator()
+
+class DictGetter(Getter):
+    def get(self, carrier, key):
+        v = carrier.get(key)
+        return [v] if v is not None else []
+
+    def keys(self, carrier):
+        return list(carrier.keys())
+        
+getter = DictGetter()
+
 # catching:
 # - all `pkg_resources` deprecation warning from multiple dependencies
 # - google rcp warnings (`pkg_resources.namespaces`)
@@ -144,18 +161,28 @@ def create_app(
             tracer_provider=request.app.ctx.tracer_provider,
             tracing_carrier=header_to_multi_dict(request.headers),
         )
-
-        with tracer.start_as_current_span(span_name, context=context) as span:
-            if request.headers.get("Content-Encoding") == "deflate":
+        if request.headers.get("Content-Encoding") == "deflate":
                 # Decompress the request data using zlib
                 decompressed_data = zlib.decompress(request.body)
                 # Load the JSON data from the decompressed request data
                 action_call = json.loads(decompressed_data)
-            else:
-                action_call = request.json
-            if action_call is None:
-                body = {"error": "Invalid body request"}
-                return response.json(body, status=400)
+        else:
+            action_call = request.json
+        if action_call is None:
+            body = {"error": "Invalid body request"}
+            return response.json(body, status=400)
+            
+        otel_meta = (
+        action_call.get("tracker", {})
+                .get("latest_message", {})
+                .get("metadata", {})
+                .get("otel", {})
+    )
+        metadata_context = prop.extract(otel_meta, getter=getter)
+        
+        final_context = metadata_context if otel_meta else context
+
+        with tracer.start_as_current_span(span_name, context=final_context) as span:
 
             utils.check_version_compatibility(action_call.get("version"))
 
