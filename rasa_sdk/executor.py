@@ -20,9 +20,15 @@ from rasa_sdk.interfaces import (
 )
 
 from rasa_sdk import utils
+from prometheus_client import Counter
 
 logger = logging.getLogger(__name__)
 
+ACTION_CALLS_TOTAL = Counter(
+    f"action_calls_total",
+    "Total number of action executions",
+    ["action_name"]
+)
 
 class CollectingDispatcher:
     """Send messages back to user."""
@@ -208,6 +214,8 @@ class ActionExecutor:
                 # Mark the class as "loaded"
                 self._loaded.add(action)
                 action = action()
+                
+        ACTION_CALLS_TOTAL.labels(action_name=action_name).inc()
 
         if isinstance(action, Action):
             self.register_function(action.name(), action.run)

@@ -54,6 +54,10 @@ RUN . /opt/venv/bin/activate && poetry build -f wheel -n \
   && poetry run pip wheel --wheel-dir=/wheels -r /wheels/requirements.txt \
   && find /app/dist -maxdepth 1 -mindepth 1 -name '*.whl' -print0 | xargs -0 -I {} mv {} /wheels/
 
+# Install Prometheus client separately
+RUN . /opt/venv/bin/activate && \
+    pip install prometheus_client
+
 WORKDIR /wheels
 # install wheels
 # hadolint ignore=SC1091,DL3013
