@@ -215,8 +215,6 @@ class ActionExecutor:
                 self._loaded.add(action)
                 action = action()
                 
-        ACTION_CALLS_TOTAL.labels(action_name=action.name()).inc()
-
         if isinstance(action, Action):
             self.register_function(action.name(), action.run)
         else:
@@ -501,6 +499,7 @@ class ActionExecutor:
         from rasa_sdk.interfaces import Tracker
 
         action_name = action_call.get("next_action")
+        ACTION_CALLS_TOTAL.labels(action_name=action_call.get("next_action")).inc()
         if action_name:
             logger.debug(f"Received request to run '{action_name}'")
             action = self.actions.get(action_name)
