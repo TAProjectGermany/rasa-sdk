@@ -215,7 +215,7 @@ class ActionExecutor:
                 self._loaded.add(action)
                 action = action()
                 
-        ACTION_CALLS_TOTAL.labels(action_name=action_name).inc()
+        ACTION_CALLS_TOTAL.labels(action_name=action.name()).inc()
 
         if isinstance(action, Action):
             self.register_function(action.name(), action.run)
